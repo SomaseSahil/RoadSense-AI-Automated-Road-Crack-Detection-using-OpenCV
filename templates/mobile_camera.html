@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RoadSense Auto-Scanner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            margin: 0; background: #0f172a; color: #fff; font-family: 'Outfit', sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; overflow: hidden;
+        }
+        .header {
+            position: absolute; top: 0; left: 0; width: 100%; padding: 1.5rem;
+            background: linear-gradient(to bottom, rgba(15,23,42,0.9), transparent);
+            text-align: center; z-index: 10;
+        }
+        h2 { margin: 0; font-size: 1.5rem; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        p { margin: 5px 0 0; font-size: 0.9rem; color: #cbd5e1; }
+        
+        #video-container {
+            position: relative; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+        }
+        #camera-stream {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        
+        .overlay-ui {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(10px);
+            padding: 1rem 2rem; border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        
+        .pulse-dot {
+            width: 12px; height: 12px; background: #ef4444; border-radius: 50%;
+            animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        
+        .status-text { font-weight: 600; font-size: 1.1rem; letter-spacing: 0.5px; }
+
+        /* Hidden canvas for taking photos */
+        #capture-canvas { display: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>RoadSense Auto-Scanner</h2>
+        <p>Point at surface. Capturing automatically.</p>
+    </div>
+
+    <div id="video-container">
+        <video id="camera-stream" autoplay playsinline></video>
+        
+        <div class="overlay-ui">
+            <div class="pulse-dot"></div>
+            <div class="status-text" id="status">Scanning...</div>
+        </div>
+    </div>
+    
+    <canvas id="capture-canvas"></canvas>
+
+    <script>
+        const video = document.getElementById('camera-stream');
+        const canvas = document.getElementById('capture-canvas');
+        const ctx = canvas.getContext('2d');
+        const statusEl = document.getElementById('status');
+        
+        // Start the back camera
+        navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+            audio: false
+        })
+        .then(stream => {
+            video.srcObject = stream;
+            // Begin auto-capture loop once video starts playing
+            video.addEventListener('loadedmetadata', () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                startAutoCapture();
+            });
+        })
+        .catch(err => {
+            console.error("Camera access denied or unavailable.", err);
+            statusEl.textContent = "Camera Access Error";
+            statusEl.style.color = "#ef4444";
+        });
+
+        function startAutoCapture() {
+            // Capture a frame every 3.5 seconds
+            setInterval(() => {
+                if(video.readyState === video.HAVE_ENOUGH_DATA) {
+                    captureAndSendFrame();
+                }
+            }, 3500);
+        }
+
+        function captureAndSendFrame() {
+            // Draw current video frame to hidden canvas
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Convert to JPEG blob
+            canvas.toBlob(blob => {
+                if(!blob) return;
+                
+                statusEl.textContent = "Analyzing...";
+                
+                const formData = new FormData();
+                // We generate a dummy filename since it's an auto-stream
+                formData.append('file', blob, `mobile_frame_${Date.now()}.jpg`);
+                
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        statusEl.textContent = "Scanning..."; // Reset back to scanning
+                    }
+                })
+                .catch(err => console.error("Upload error", err));
+                
+            }, 'image/jpeg', 0.85); // 85% quality to save bandwidth
+        }
+    </script>
+</body>
+</html>

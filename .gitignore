@@ -1,0 +1,36 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+venv/
+.env/
+env/
+ENV/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Flask/App Specific
+instance/
+.webassets-cache
+
+# Dynamic Data Folders
+# We ignore the contents of these folders because they are filled with 
+# dynamically generated user uploads and processed outputs, which 
+# shouldn't be tracked in version control.
+dataset/*
+!dataset/.gitkeep
+output/*
+!output/.gitkeep
+
+# IDEs
+.idea/
+.vscode/

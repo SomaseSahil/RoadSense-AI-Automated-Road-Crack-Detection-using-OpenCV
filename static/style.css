@@ -1,0 +1,224 @@
+:root {
+    --bg-color: #0b0f19;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --accent: #3b82f6;
+    --accent-glow: rgba(59, 130, 246, 0.5);
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: 'Outfit', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Backgound Blobs for modern aesthetic */
+.background-blobs {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: -1; overflow: hidden;
+}
+
+.blob {
+    position: absolute;
+    filter: blur(100px);
+    opacity: 0.4;
+    border-radius: 50%;
+}
+
+.blob-1 {
+    top: -10%; left: -10%;
+    width: 40vw; height: 40vw;
+    background: #4f46e5;
+    animation: float 20s infinite alternate;
+}
+
+.blob-2 {
+    bottom: -15%; right: -5%;
+    width: 45vw; height: 45vw;
+    background: #0ea5e9;
+    animation: float 25s infinite alternate-reverse;
+}
+
+@keyframes float {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(5%, 5%); }
+}
+
+.container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+header h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin: 0;
+    background: linear-gradient(to right, #60a5fa, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
+}
+
+header h1 span { color: #f8fafc; -webkit-text-fill-color: #f8fafc; font-weight: 300; }
+header p { color: var(--text-secondary); font-size: 1.2rem; margin-top: 0.5rem; }
+
+/* Dashboard Layout */
+.dashboard {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 2rem;
+}
+
+/* Glass UI Panels */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Upload Panel */
+.upload-box {
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 2.5rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(0,0,0,0.2);
+}
+
+.upload-box:hover, .drag-active {
+    border-color: var(--accent);
+    background: rgba(59, 130, 246, 0.08);
+    transform: translateY(-2px);
+}
+
+.upload-icon {
+    display: inline-block;
+    background: var(--text-primary);
+    color: var(--bg-color);
+    padding: 0.5rem 1.5rem;
+    border-radius: 30px;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.upload-box h3 { margin: 0 0 0.5rem; font-weight: 600; font-size: 1.1rem; }
+.upload-box p { margin: 0; color: var(--text-secondary); font-size: 0.9rem; }
+
+.divider {
+    display: flex; align-items: center; text-align: center; margin: 2rem 0; color: var(--text-secondary);
+}
+.divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--glass-border); }
+.divider span { padding: 0 1rem; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px; opacity: 0.5; }
+
+.mobile-scan { text-align: center; }
+.mobile-scan h3 { margin: 0 0 0.5rem; font-size: 1.1rem;}
+.mobile-scan p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5; }
+
+.qr-container {
+    background: #fff;
+    padding: 1rem;
+    border-radius: 16px;
+    display: inline-block;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    transition: transform 0.3s;
+}
+.qr-container:hover { transform: scale(1.05); }
+.qr-code { width: 100%; max-width: 160px; display: block; }
+
+
+/* Results Panel */
+.image-comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.img-wrapper { position: relative; border-radius: 16px; overflow: hidden; background: rgba(0,0,0,0.3); }
+.img-wrapper .label {
+    position: absolute; top: 1rem; left: 1rem; margin: 0;
+    background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);
+    padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.img-wrapper img {
+    width: 100%; height: 350px; object-fit: contain; /* Changed from cover so we don't crop road results */
+    display: block;
+}
+
+.parameters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+}
+
+.param-card {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    text-align: center;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.param-card:hover { transform: translateY(-5px); background: rgba(0,0,0,0.4); }
+
+.param-title { color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; margin-bottom: 0.5rem; }
+.param-value { font-size: 1.4rem; font-weight: 600; }
+
+.param-card.highlight {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+    border-color: rgba(139, 92, 246, 0.4);
+    grid-column: span 1;
+}
+.param-card.highlight .param-title { color: #e2e8f0; }
+.param-card.highlight .param-value {
+    color: #c084fc; font-size: 1.8rem;
+}
+
+.action-card {
+    grid-column: 1 / -1; /* Force it to span all columns */
+    width: 100%;
+}
+
+/* Severity Colors */
+[data-severity="low"] { color: #4ade80; }
+[data-severity="medium"] { color: #facc15; }
+[data-severity="high"] { color: #f87171; }
+
+.loader {
+    position: absolute; top: calc(50% - 20px); left: calc(50% - 20px); width: 40px; height: 40px;
+    border: 4px solid var(--glass-border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s infinite linear;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+@media (max-width: 1024px) {
+    .dashboard { grid-template-columns: 1fr; }
+    .image-comparison { grid-template-columns: 1fr; }
+    .img-wrapper img { height: auto; aspect-ratio: 16/9; }
+    .param-card.highlight { grid-column: span 1; }
+}

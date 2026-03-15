@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Crack Detection Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.2">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Road<span>Sense</span> AI</h1>
+            <p>Advanced Pavement Analytics & Crack Detection</p>
+        </header>
+
+        <main class="dashboard">
+            <!-- Left Column: Upload & QR -->
+            <section class="controls-panel glass-panel">
+                <div class="upload-box" id="drop-zone">
+                    <div class="upload-icon">Upload</div>
+                    <h3>Drag & Drop or Click to Upload</h3>
+                    <p>Supports JPG, PNG</p>
+                    <input type="file" id="file-input" accept="image/*" hidden>
+                </div>
+                
+                <div class="divider"><span>OR</span></div>
+                
+                <div class="mobile-scan">
+                    <h3>Scan for Mobile Camera</h3>
+                    <p>Use your phone's camera to scan the road in real-time.</p>
+                    <div class="qr-container">
+                        <img src="/qr" alt="Mobile Scanner QR Code" class="qr-code">
+                    </div>
+                </div>
+            </section>
+
+             <!-- Right Column: Results & Image Preview -->
+            <section class="results-panel glass-panel">
+                <div class="image-comparison">
+                    <div class="img-wrapper">
+                        <p class="label">Original</p>
+                        <!-- Placeholders to load images gracefully -->
+                        <img id="preview-original" src="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250'%3E%3Crect width='400' height='250' fill='%231e293b'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='16' fill='%2364748b' text-anchor='middle' dy='.3em'%3EUpload Image%3C/text%3E%3C/svg%3E" alt="Original Image">
+                    </div>
+                    <div class="img-wrapper">
+                        <p class="label">Detected Cracks</p>
+                        <img id="preview-processed" src="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250'%3E%3Crect width='400' height='250' fill='%231e293b'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='16' fill='%2364748b' text-anchor='middle' dy='.3em'%3EWaiting for test...%3C/text%3E%3C/svg%3E" alt="Processed Image">
+                        <div class="loader" id="loader" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="parameters-grid">
+                    <div class="param-card">
+                        <div class="param-title">Crack Thickness</div>
+                        <div class="param-value" id="val-thickness">--</div>
+                    </div>
+                    <div class="param-card">
+                        <div class="param-title">Severity Level</div>
+                        <div class="param-value" id="val-severity" data-severity="none">--</div>
+                    </div>
+                    <div class="param-card">
+                        <div class="param-title">Est. Road Life</div>
+                        <div class="param-value" id="val-life">--</div>
+                    </div>
+                    <div class="param-card">
+                        <div class="param-title">Affected Area</div>
+                        <div class="param-value" id="val-area">--</div>
+                    </div>
+                    <div class="param-card highlight">
+                        <div class="param-title">Structural Score</div>
+                        <div class="param-value" id="val-score">--</div>
+                    </div>
+                    <div class="param-card">
+                        <div class="param-title">Detected Cracks</div>
+                        <div class="param-value" id="val-count">--</div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Bottom Column: Dedicated Suggestion Section -->
+            <section class="action-card glass-panel" style="grid-column: 1 / -1; margin-top: 0; padding: 2.5rem; border-top: 3px solid #3b82f6;">
+                <h3 style="margin: 0 0 1rem 0; color: #60a5fa; font-size: 1.4rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; text-align: center;">Recommended Action Plan</h3>
+                <div id="val-action" style="font-size: 1.15rem; line-height: 1.8; font-weight: 400; color: #f8fafc; text-align: justify; max-width: 900px; margin: 0 auto; letter-spacing: 0.5px;">
+                    Waiting for image analysis to generate a detailed repair recommendation.
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const loader = document.getElementById('loader');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-active');
+        });
+
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-active'));
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-active');
+            if(e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                uploadImage();
+            }
+        });
+
+        fileInput.addEventListener('change', uploadImage);
+
+        // Optional auto-poll feature if we want mobile uploads to show up on the desktop automatically
+        // For simplicity, we'll just implement polling to check the latest image in output-set
+        // but given the requirements, the user takes a pic on the mobile to send here.
+        // Actually, we can fetch the latest from the server every 3 seconds to see if a phone uploaded one.
+        let lastImage = null;
+        
+        function uploadImage() {
+            if(!fileInput.files.length) return;
+            const file = fileInput.files[0];
+
+            // Show original preview locally first
+            document.getElementById('preview-original').src = URL.createObjectURL(file);
+            document.getElementById('preview-processed').src = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250'%3E%3Crect width='400' height='250' fill='%231e293b'/%3E%3C/svg%3E";
+            loader.style.display = "block";
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                loader.style.display = "none";
+                if(data.success) {
+                    updateDashboard(data);
+                } else {
+                    alert(data.error);
+                }
+            })
+            .catch(err => {
+                loader.style.display = "none";
+                console.error(err);
+                alert("An error occurred during upload.");
+            });
+        }
+        
+        function updateDashboard(data) {
+            document.getElementById('preview-original').src = data.original_image;
+            document.getElementById('preview-processed').src = data.processed_image;
+            
+            document.getElementById('val-thickness').textContent = data.parameters.thickness;
+            
+            const sev = document.getElementById('val-severity');
+            sev.textContent = data.parameters.severity;
+            sev.setAttribute('data-severity', data.parameters.severity.toLowerCase());
+
+            document.getElementById('val-life').textContent = data.parameters.life;
+            document.getElementById('val-area').textContent = data.parameters.area;
+            document.getElementById('val-action').textContent = data.parameters.action;
+            document.getElementById('val-score').textContent = data.parameters.score;
+            document.getElementById('val-count').textContent = data.parameters.crack_count;
+            
+            lastImageName = data.original_image;
+        }
+
+        // Auto-refresh when mobile uploads an image. 
+        // We poll the server every 3 seconds to see if a newer processed image is available.
+        let lastImageName = null;
+        
+        setInterval(() => {
+            fetch('/latest_result')
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success && data.original_image !== lastImageName) {
+                        updateDashboard(data);
+                    }
+                })
+                .catch(err => console.log('Polling err', err));
+        }, 3000);
+    </script>
+</body>
+</html>
