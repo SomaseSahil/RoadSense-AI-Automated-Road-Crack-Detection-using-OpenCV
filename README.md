@@ -1,4 +1,4 @@
-# RoadSense AI: Advanced Pavement Analytics
+# RoadSense AI: Automated-Road-Crack-Detection-using-OpenCV
 
 An end-to-end Python Computer Vision application for detecting, analyzing, and structural-scoring road cracks. It features a modern Flask web dashboard and a seamless **QR code mobile scanner** that connects smartphone cameras directly to the local AI processing server.
 
