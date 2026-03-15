@@ -36,8 +36,7 @@ An end-to-end Python Computer Vision application for detecting, analyzing, and s
 
 1.  **Clone the Repository**
     ```bash
-    git clone https://github.com/yourusername/road-crack-detection.git
-    cd road-crack-detection/road-crack-detection-opencv
+    git clone [https://github.com/SomaseSahil/RoadSense-AI-Automated-Road-Crack-Detection-using-OpenCV]
     ```
 
 2.  **Install Dependencies**
